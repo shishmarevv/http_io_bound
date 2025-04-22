@@ -3,6 +3,8 @@ package task
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"time"
 )
 
@@ -44,4 +46,25 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 	}
 	task.End = time.Now()
 	manager.mutex.Unlock()
+}
+
+func ioTask(ctx context.Context) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/process", nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status: %s", resp.Status)
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
