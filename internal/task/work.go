@@ -48,21 +48,21 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 	manager.mutex.Unlock()
 }
 
-func ioTask(ctx context.Context) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/process", nil)
+func IoTask(ctx context.Context) (string, error) {
+	request, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/process", nil)
 	if err != nil {
 		return "", err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer response.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status: %s", resp.Status)
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status: %s", response.Status)
 	}
-	body, err := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}

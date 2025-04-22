@@ -23,13 +23,13 @@ func processHandler(w http.ResponseWriter, r *http.Request) {
 
 	select {
 	case <-time.After(delay):
-		resp := response{
+		response := response{
 			Message:   "Task completed successfully",
 			Duration:  delay / time.Millisecond,
 			Timestamp: time.Now(),
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		json.NewEncoder(w).Encode(response)
 	case <-ctx.Done():
 		log.Println("⚠️ Request cancelled by client")
 		http.Error(w, "request cancelled", http.StatusRequestTimeout)
@@ -37,20 +37,19 @@ func processHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
 	mux := http.NewServeMux()
 	mux.HandleFunc("/process", processHandler)
 
-	srv := &http.Server{
-		Addr:         ":9090",
+	server := &http.Server{
+		Addr:         ":8080",
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 6 * time.Minute,
 		IdleTimeout:  2 * time.Minute,
 	}
 
-	log.Println("🚀 Stub I/O-bound server listening on :9090")
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	log.Println("🚀 Stub I/O-bound server listening on :8080")
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed: %v", err)
 	}
 }

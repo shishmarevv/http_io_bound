@@ -1,1 +1,75 @@
 package web
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"http_io_bound/internal/task"
+)
+
+type Handler struct {
+	Manager *task.Manager
+}
+
+func NewHandler(manager *task.Manager) *Handler {
+	return &Handler{Manager: manager}
+}
+
+func (handler *Handler) Routes(router chi.Router) {
+	router.Post("/tasks", handler.CreateTask)
+	router.Get("/tasks/{id}", handler.GetStatus)
+	router.Get("/tasks/{id}/result", handler.GetResult)
+}
+
+func (handler *Handler) CreateTask(writer http.ResponseWriter, request *http.Request) {
+
+	id := handler.Manager.CreateTask(task.IoTask)
+
+	writer.Header().Set("Location", "/tasks/"+id)
+	writer.WriteHeader(http.StatusAccepted)
+}
+
+func (handler *Handler) GetStatus(writer http.ResponseWriter, request *http.Request) {
+	id := chi.URLParam(request, "id")
+	t, ok := handler.Manager.Get(id)
+	if !ok {
+		http.Error(writer, "task not found", http.StatusNotFound)
+		return
+	}
+
+	resp := map[string]interface{}{
+		"id":         t.ID,
+		"status":     t.Status,
+		"createdAt":  t.Start,
+		"finishedAt": t.End,
+	}
+	writer.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(writer).Encode(resp)
+}
+
+func (handler *Handler) GetResult(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	tsk, ok := handler.Manager.Get(id)
+	if !ok {
+		http.Error(w, "task not found", http.StatusNotFound)
+		return
+	}
+
+	switch tsk.Status {
+	case task.Waiting, task.Processing:
+		http.Error(w, "task not finished", http.StatusConflict)
+		return
+	case task.Failed:
+		http.Error(w, tsk.Error.Error(), http.StatusInternalServerError)
+		return
+	case task.Completed:
+		resp := map[string]string{"result": tsk.Output}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+		return
+	default:
+		http.Error(w, "unknown status", http.StatusInternalServerError)
+		return
+	}
+}
