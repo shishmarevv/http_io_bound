@@ -38,14 +38,14 @@ func (handler *Handler) GetStatus(writer http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	resp := map[string]interface{}{
-		"id":         t.ID,
-		"status":     t.Status,
-		"createdAt":  t.Start,
-		"finishedAt": t.End,
+	response := map[string]interface{}{
+		"id":     t.ID,
+		"status": t.Status,
+		"start":  t.Start,
+		"end":    t.End,
 	}
 	writer.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(writer).Encode(resp)
+	json.NewEncoder(writer).Encode(response)
 }
 
 func (handler *Handler) GetResult(w http.ResponseWriter, r *http.Request) {

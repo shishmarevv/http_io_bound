@@ -60,7 +60,7 @@ func (manager *Manager) Get(id string) (*Task, bool) {
 func NewManager(workCount int) *Manager {
 	manager := &Manager{
 		tasks:   make(map[string]*Task),
-		jobs:    make(chan *Task, workCount),
+		jobs:    make(chan *Task, workCount*3),
 		workNum: workCount}
 	return manager
 }
