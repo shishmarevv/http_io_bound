@@ -41,14 +41,14 @@ func main() {
 	mux.HandleFunc("/process", processHandler)
 
 	server := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":9090",
 		Handler:      mux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 6 * time.Minute,
 		IdleTimeout:  2 * time.Minute,
 	}
 
-	log.Println("🚀 Stub I/O-bound server listening on :8080")
+	log.Println("🚀 Stub I/O-bound server listening on :9090")
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed: %v", err)
 	}
