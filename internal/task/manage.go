@@ -27,7 +27,7 @@ type Task struct {
 }
 
 type Manager struct {
-	mutex   sync.Mutex
+	mutex   sync.RWMutex
 	tasks   map[string]*Task
 	jobs    chan *Task
 	workNum int
@@ -51,9 +51,9 @@ func (manager *Manager) CreateTask(function func(ctx context.Context) (string, e
 }
 
 func (manager *Manager) Get(id string) (*Task, bool) {
-	manager.mutex.Lock()
+	manager.mutex.RLock()
 	task, found := manager.tasks[id]
-	manager.mutex.Unlock()
+	manager.mutex.RUnlock()
 	return task, found
 }
 
@@ -71,31 +71,12 @@ func (manager *Manager) Init(ctx context.Context) {
 	}
 }
 
-func (manager *Manager) worker(ctx context.Context) {
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case task := <-manager.jobs:
-			manager.run(ctx, task)
+func (manager *Manager) RemoveOldTasks(duration time.Duration) {
+	manager.mutex.Lock()
+	defer manager.mutex.Unlock()
+	for id, task := range manager.tasks {
+		if time.Since(task.End) > duration {
+			delete(manager.tasks, id)
 		}
 	}
-}
-
-func (manager *Manager) run(ctx context.Context, task *Task) {
-	manager.mutex.Lock()
-	task.Status = Processing
-	manager.mutex.Unlock()
-
-	result, err := task.function(ctx)
-
-	manager.mutex.Lock()
-	if err != nil {
-		task.Status = Failed
-		task.Error = err
-	} else {
-		task.Status = Completed
-		task.Output = result
-	}
-	task.End = time.Now()
 }
