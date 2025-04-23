@@ -3,6 +3,7 @@ package task
 import (
 	"context"
 	"fmt"
+	"http_io_bound/internal/errlog"
 	"io"
 	"net/http"
 	"time"
@@ -52,9 +53,7 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 
 func IoTask(ctx context.Context) (string, error) {
 	set, err := config.Load()
-	if err != nil {
-		return "", fmt.Errorf("failed to load config: %v", err)
-	}
+	errlog.Check("Can't load config", err, true)
 	request, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:"+set.IOserver.Port+"/process", nil)
 	if err != nil {
 		return "", err

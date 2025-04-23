@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/spf13/viper"
@@ -46,7 +45,7 @@ func Load() (*Config, error) {
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-			return nil, fmt.Errorf("error reading config file: %w", err)
+			return nil, err
 		}
 	}
 
@@ -54,7 +53,7 @@ func Load() (*Config, error) {
 
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("unable to decode into config struct: %w", err)
+		return nil, err
 	}
 
 	return &cfg, nil

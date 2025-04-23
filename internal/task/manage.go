@@ -3,7 +3,7 @@ package task
 import (
 	"context"
 	"github.com/google/uuid"
-	"log"
+	"http_io_bound/internal/errlog"
 	"sync"
 	"time"
 
@@ -38,9 +38,7 @@ type Manager struct {
 
 func (manager *Manager) CreateTask(function func(ctx context.Context) (string, error)) string {
 	set, err := config.Load()
-	if err != nil {
-		log.Fatalf("Error loading config: %v", err)
-	}
+	errlog.Check("Can't load config", err, true)
 
 	id := uuid.NewString()
 	task := &Task{

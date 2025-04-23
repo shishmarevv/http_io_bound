@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"http_io_bound/internal/errlog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -32,17 +33,17 @@ func (handler *Handler) CreateTask(writer http.ResponseWriter, request *http.Req
 
 func (handler *Handler) GetStatus(writer http.ResponseWriter, request *http.Request) {
 	id := chi.URLParam(request, "id")
-	t, ok := handler.Manager.Get(id)
+	tsk, ok := handler.Manager.Get(id)
 	if !ok {
-		http.Error(writer, "task not found", http.StatusNotFound)
+		errlog.HTTPCheck(writer, "task not found", http.StatusNotFound)
 		return
 	}
 
 	response := map[string]interface{}{
-		"id":     t.ID,
-		"status": t.Status,
-		"start":  t.Start,
-		"end":    t.End,
+		"id":     tsk.ID,
+		"status": tsk.Status,
+		"start":  tsk.Start,
+		"end":    tsk.End,
 	}
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(response)
@@ -52,16 +53,16 @@ func (handler *Handler) GetResult(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	tsk, ok := handler.Manager.Get(id)
 	if !ok {
-		http.Error(w, "task not found", http.StatusNotFound)
+		errlog.HTTPCheck(w, "task not found", http.StatusNotFound)
 		return
 	}
 
 	switch tsk.Status {
 	case task.Waiting, task.Processing:
-		http.Error(w, "task not finished", http.StatusConflict)
+		errlog.HTTPCheck(w, "task not finished", http.StatusConflict)
 		return
 	case task.Failed:
-		http.Error(w, tsk.Error.Error(), http.StatusInternalServerError)
+		errlog.HTTPCheck(w, tsk.Error.Error(), http.StatusInternalServerError)
 		return
 	case task.Completed:
 		resp := map[string]string{"result": tsk.Output}
@@ -69,7 +70,7 @@ func (handler *Handler) GetResult(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(resp)
 		return
 	default:
-		http.Error(w, "unknown status", http.StatusInternalServerError)
+		errlog.HTTPCheck(w, "unknown status", http.StatusInternalServerError)
 		return
 	}
 }
