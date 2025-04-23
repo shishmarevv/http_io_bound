@@ -1,0 +1,14 @@
+http:
+  port: "8080"
+  read_timeout: "5s"
+  write_timeout: "10m"
+  idle_timeout: "1m"
+
+ioserver:
+  port: "9090"
+  read_timeout: "15s"
+  write_timeout: "15m"
+  idle_timeout: "1m"
+
+task:
+  worker_count: 10
