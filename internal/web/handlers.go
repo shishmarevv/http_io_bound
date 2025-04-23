@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"http_io_bound/internal/errlog"
 	"net/http"
@@ -11,6 +12,11 @@ import (
 
 type Handler struct {
 	Manager *task.Manager
+}
+
+type TaskRequest struct {
+	Type   string          `json:"type"`
+	Params json.RawMessage `json:"params"`
 }
 
 func NewHandler(manager *task.Manager) *Handler {
@@ -24,8 +30,22 @@ func (handler *Handler) Routes(router chi.Router) {
 }
 
 func (handler *Handler) CreateTask(writer http.ResponseWriter, request *http.Request) {
+	var taskrequest TaskRequest
+	if err := json.NewDecoder(request.Body).Decode(&taskrequest); err != nil {
+		errlog.HTTPCheck(writer, "invalid JSON payload", http.StatusBadRequest)
+		return
+	}
 
-	id := handler.Manager.CreateTask(task.IoTask)
+	var fn func(context.Context) (string, error)
+	switch taskrequest.Type {
+	case "stub":
+		fn = task.IoTask
+	default:
+		errlog.HTTPCheck(writer, "unknown task type", http.StatusBadRequest)
+		return
+	}
+
+	id := handler.Manager.CreateTask(fn)
 
 	writer.Header().Set("Location", "/tasks/"+id)
 	writer.WriteHeader(http.StatusAccepted)
