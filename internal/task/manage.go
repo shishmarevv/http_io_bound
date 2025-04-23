@@ -2,12 +2,11 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"http_io_bound/internal/errlog"
 	"sync"
 	"time"
-
-	"http_io_bound/config"
 )
 
 type Status string
@@ -37,9 +36,6 @@ type Manager struct {
 }
 
 func (manager *Manager) CreateTask(function func(ctx context.Context) (string, error)) string {
-	set, err := config.Load()
-	errlog.Check("Can't load config", err, true)
-
 	id := uuid.NewString()
 	task := &Task{
 		ID:       id,
@@ -53,14 +49,13 @@ func (manager *Manager) CreateTask(function func(ctx context.Context) (string, e
 
 	manager.jobs <- task
 
-	if len(manager.tasks) > set.Task.TaskMapSize {
-		manager.RemoveOldTasks(15 * time.Minute)
-	}
 	return id
 }
 
 func (manager *Manager) Get(id string) (*Task, bool) {
 	manager.mutex.RLock()
+
+	errlog.Post(fmt.Sprintf("Looking for task %s", id))
 	task, found := manager.tasks[id]
 	manager.mutex.RUnlock()
 	return task, found
@@ -78,6 +73,17 @@ func (manager *Manager) Init(ctx context.Context) {
 	for i := 0; i < manager.workNum; i++ {
 		go manager.worker(ctx)
 	}
+}
+
+func (manager *Manager) ListTasks() []*Task {
+	manager.mutex.RLock()
+	defer manager.mutex.RUnlock()
+
+	list := make([]*Task, 0, len(manager.tasks))
+	for _, t := range manager.tasks {
+		list = append(list, t)
+	}
+	return list
 }
 
 func (manager *Manager) RemoveOldTasks(duration time.Duration) {

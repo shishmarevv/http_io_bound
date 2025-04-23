@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -24,19 +25,23 @@ func setupServer() (*chi.Mux, *task.Manager) {
 	return mux, manager
 }
 
-func TestCreateAndGetStatus(t *testing.T) {
+func TestCreateAndGetStatus(test *testing.T) {
+	os.Setenv("LOG_DIR", test.TempDir())
+
 	router, _ := setupServer()
 
-	request := httptest.NewRequest(http.MethodPost, "/tasks", nil)
+	jsonBody := `{"type":"stub","params":{}}`
+	request := httptest.NewRequest(http.MethodPost, "/tasks", strings.NewReader(jsonBody))
+	request.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
 	router.ServeHTTP(recorder, request)
 
 	if recorder.Code != http.StatusAccepted {
-		t.Fatalf("Expected 202, got %d", recorder.Code)
+		test.Fatalf("Expected 202, got %d", recorder.Code)
 	}
 	location := recorder.Header().Get("Location")
 	if !strings.HasPrefix(location, "/tasks/") {
-		t.Fatalf("Invalid Location header: %q", location)
+		test.Fatalf("Invalid Location header: %q", location)
 	}
 
 	request2 := httptest.NewRequest(http.MethodGet, location, nil)
@@ -44,20 +49,22 @@ func TestCreateAndGetStatus(t *testing.T) {
 	router.ServeHTTP(recorder2, request2)
 
 	if recorder2.Code != http.StatusOK {
-		t.Errorf("Expected 200 on status, got %d", recorder2.Code)
+		test.Errorf("Expected 200 on status, got %d", recorder2.Code)
 	}
 	var st struct {
 		Status string `json:"status"`
 	}
 	if err := json.NewDecoder(recorder2.Body).Decode(&st); err != nil {
-		t.Fatal(err)
+		test.Fatal(err)
 	}
 	if st.Status != string(task.Waiting) && st.Status != string(task.Processing) {
-		t.Errorf("Unexpected status %q", st.Status)
+		test.Errorf("Unexpected status %q", st.Status)
 	}
 }
 
 func TestGetResult(test *testing.T) {
+	os.Setenv("LOG_DIR", test.TempDir())
+
 	router, manager := setupServer()
 
 	id := manager.CreateTask(func(ctx context.Context) (string, error) {

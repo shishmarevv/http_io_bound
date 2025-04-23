@@ -6,10 +6,9 @@ http:
 
 ioserver:
   port: "9090"
-  read_timeout: "5s"
-  write_timeout: "10m"
+  read_timeout: "15s"
+  write_timeout: "15m"
   idle_timeout: "1m"
 
 task:
   worker_count: 10
-  task_map_size: 30

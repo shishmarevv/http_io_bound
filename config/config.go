@@ -15,7 +15,6 @@ type HTTPConfig struct {
 
 type TaskConfig struct {
 	WorkerCount int `mapstructure:"worker_count"`
-	TaskMapSize int `mapstructure:"task_map_size"`
 }
 
 type Config struct {
@@ -38,7 +37,6 @@ func Load() (*Config, error) {
 	viper.SetDefault("ioserver.write_timeout", "10m")
 	viper.SetDefault("ioserver.idle_timeout", "1m")
 	viper.SetDefault("task.worker_count", 5)
-	viper.SetDefault("task.job_queue_size", 10)
 	viper.SetDefault("cors.allow_origins", []string{"*"})
 	viper.SetDefault("cors.allow_methods", []string{"GET", "POST", "OPTIONS"})
 	viper.SetDefault("cors.allow_headers", []string{"Content-Type", "Authorization"})

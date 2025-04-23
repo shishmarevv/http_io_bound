@@ -19,7 +19,7 @@ import (
 func main() {
 	set, err := config.Load()
 	errlog.Check("Can't read config", err, true)
-	
+
 	manager := task.NewManager(set.Task.WorkerCount)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

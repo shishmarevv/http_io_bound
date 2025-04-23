@@ -3,11 +3,14 @@ package task
 import (
 	"context"
 	"errors"
+	"os"
 	"testing"
 	"time"
 )
 
 func TestLifecycle(test *testing.T) {
+	os.Setenv("LOG_DIR", test.TempDir())
+
 	manager := NewManager(1)
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -40,6 +43,8 @@ func TestLifecycle(test *testing.T) {
 }
 
 func TestError(test *testing.T) {
+	os.Setenv("LOG_DIR", test.TempDir())
+
 	manager := NewManager(1)
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()

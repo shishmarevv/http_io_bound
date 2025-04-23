@@ -54,10 +54,13 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 func IoTask(ctx context.Context) (string, error) {
 	set, err := config.Load()
 	errlog.Check("Can't load config", err, true)
+
+	errlog.Post("IO Task created")
 	request, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:"+set.IOserver.Port+"/process", nil)
 	if err != nil {
 		return "", err
 	}
+
 	response, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return "", err
@@ -68,6 +71,7 @@ func IoTask(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("unexpected status: %s", response.Status)
 	}
 	body, err := io.ReadAll(response.Body)
+
 	if err != nil {
 		return "", err
 	}

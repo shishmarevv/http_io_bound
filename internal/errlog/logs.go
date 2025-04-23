@@ -15,8 +15,13 @@ type Report struct {
 }
 
 func ReportFile() (*os.File, error) {
+	logsDir := os.Getenv("LOG_DIR")
+	if logsDir == "" {
+		logsDir = "logs"
+	}
+
 	var path string
-	path = filepath.Join("logs", fmt.Sprintf("%s.log", time.Now().Format("02-01-2006")))
+	path = filepath.Join(logsDir, fmt.Sprintf("%s.log", time.Now().Format("02-01-2006")))
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
