@@ -6,6 +6,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"http_io_bound/config"
 )
 
 func (manager *Manager) worker(ctx context.Context) {
@@ -49,7 +51,11 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 }
 
 func IoTask(ctx context.Context) (string, error) {
-	request, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:9090/process", nil)
+	set, err := config.Load()
+	if err != nil {
+		return "", fmt.Errorf("failed to load config: %v", err)
+	}
+	request, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:"+set.IOserver.Port+"/process", nil)
 	if err != nil {
 		return "", err
 	}

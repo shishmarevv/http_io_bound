@@ -3,8 +3,11 @@ package task
 import (
 	"context"
 	"github.com/google/uuid"
+	"log"
 	"sync"
 	"time"
+
+	"http_io_bound/config"
 )
 
 type Status string
@@ -34,6 +37,11 @@ type Manager struct {
 }
 
 func (manager *Manager) CreateTask(function func(ctx context.Context) (string, error)) string {
+	set, err := config.Load()
+	if err != nil {
+		log.Fatalf("Error loading config: %v", err)
+	}
+
 	id := uuid.NewString()
 	task := &Task{
 		ID:       id,
@@ -47,6 +55,9 @@ func (manager *Manager) CreateTask(function func(ctx context.Context) (string, e
 
 	manager.jobs <- task
 
+	if len(manager.tasks) > set.Task.TaskMapSize {
+		manager.RemoveOldTasks(15 * time.Minute)
+	}
 	return id
 }
 

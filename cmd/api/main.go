@@ -11,43 +11,48 @@ import (
 	"syscall"
 	"time"
 
+	"http_io_bound/config"
 	"http_io_bound/internal/task"
 	"http_io_bound/internal/web"
 )
 
 func main() {
-	workerCount := 5
-	tm := task.NewManager(workerCount)
+	set, err := config.Load()
+	if err != nil {
+		log.Fatalf("Error reading config: %v", err)
+	}
+	workerCount := set.Task.WorkerCount
+	manager := task.NewManager(workerCount)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	tm.Init(ctx)
+	manager.Init(ctx)
 
 	router := chi.NewRouter()
 	router.Use(web.Logging)
 	router.Use(web.Recover)
 
-	handler := web.NewHandler(tm)
+	handler := web.NewHandler(manager)
 	handler.Routes(router)
 
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":" + set.API.Port,
 		Handler:      router,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Minute,
-		IdleTimeout:  1 * time.Minute,
+		ReadTimeout:  set.API.ReadTimeout,
+		WriteTimeout: set.API.WriteTimeout,
+		IdleTimeout:  set.API.IdleTimeout,
 	}
 
 	go func() {
-		log.Printf("🚀 Server listening on %s", srv.Addr)
+		log.Printf("Server listening on %s", srv.Addr)
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("ListenAndServe error: %v", err)
 		}
 	}()
 
 	<-ctx.Done()
-	log.Println("🛑 Shutdown signal received, stopping server...")
+	log.Println("Shutdown signal received, stopping server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -55,5 +60,5 @@ func main() {
 		log.Fatalf("Server shutdown failed: %v", err)
 	}
 
-	log.Println("✅ Server gracefully stopped")
+	log.Println("Server stopped")
 }
