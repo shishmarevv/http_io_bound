@@ -1,16 +1,15 @@
 ![Go Report](https://goreportcard.com/badge/github.com/shishmarevv/http_io_bound)
 ![Repository Top Language](https://img.shields.io/github/languages/top/shishmarevv/http_io_bound)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/shishmarevv/http_io_bound)
-![Lines of code](https://img.shields.io/tokei/lines/github/shishmarevv/http_io_bound)
 ![GitHub last commit](https://img.shields.io/github/last-commit/shishmarevv/http_io_bound)
 
 # I/O-Bound Task Manager HTTP API
 
 A simple, extensible Go service that lets you enqueue and track long-running I/O-bound jobs (3–5 minutes) entirely in memory, without any external databases or message brokers.
 
-<img align="right" width="30%" src="./assets/logo.png">
 
 ## Features
+<img align="right" width="30%" src="./assets/logo.png">
 
 🥂 Clean architecture
 
