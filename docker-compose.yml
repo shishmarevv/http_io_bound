@@ -1,0 +1,19 @@
+services:
+  stub:
+    build:
+      context: .
+      dockerfile: Dockerfile.stub
+    ports:
+      - "9090:9090"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    depends_on:
+      - stub
+    ports:
+      - "8080:8080"
+    environment:
+      STUB_URL: http://stub
+    restart: on-failure

@@ -6,6 +6,7 @@ import (
 	"http_io_bound/internal/errlog"
 	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"http_io_bound/config"
@@ -43,6 +44,7 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 	if err != nil {
 		task.Status = Failed
 		task.Error = err
+		errlog.Post(fmt.Sprintf("Task %s failed, err: %v", task.ID, err))
 	} else {
 		task.Status = Completed
 		task.Output = result
@@ -51,12 +53,21 @@ func (manager *Manager) run(ctx context.Context, task *Task) {
 	manager.mutex.Unlock()
 }
 
+func getEnv(key, def string) string {
+	if v, ok := os.LookupEnv(key); ok && v != "" {
+		return v
+	}
+	return def
+}
+
 func IoTask(ctx context.Context) (string, error) {
 	set, err := config.Load()
 	errlog.Check("Can't load config", err, true)
 
 	errlog.Post("IO Task created")
-	request, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:"+set.IOserver.Port+"/process", nil)
+
+	stubURL := getEnv("STUB_URL", "http://localhost")
+	request, err := http.NewRequestWithContext(ctx, "GET", stubURL+":"+set.IOserver.Port+"/process", nil)
 	if err != nil {
 		return "", err
 	}

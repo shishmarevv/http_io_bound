@@ -1,0 +1,17 @@
+FROM ubuntu:latest
+LABEL authors="shishmarevv"
+
+# Build stage
+FROM golang:1.24-alpine AS builder-stub
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN go build -o stub-server ./cmd/io_server/main.go
+
+# Final stage
+FROM alpine:latest
+WORKDIR /root
+RUN mkdir -p logs
+COPY --from=builder-stub /app/stub-server .
+ENTRYPOINT ["./stub-server"]

@@ -1,0 +1,21 @@
+FROM ubuntu:latest
+LABEL authors="shishmarevv"
+
+# Build stage
+FROM golang:1.24-alpine AS builder-api
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o api-server ./cmd/api/main.go
+
+# Final stage
+FROM alpine:latest
+RUN apk add --no-cache bash netcat-openbsd
+WORKDIR /root
+RUN mkdir -p logs
+COPY --from=builder-api /app/api-server .
+COPY config/ ./config/
+COPY wait-for-it.sh ./wait-for-it.sh
+EXPOSE 8080
+ENTRYPOINT ["./wait-for-it.sh", "stub:9090", "./api-server"]

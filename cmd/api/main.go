@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
-	"http_io_bound/cmd/api/commands"
 	"http_io_bound/internal/errlog"
 	"net/http"
 	"os"
@@ -20,9 +19,6 @@ import (
 func main() {
 	set, err := config.Load()
 	errlog.Check("Can't read config: ", err, true)
-
-	err = commands.Execute()
-	errlog.Check("CLI error: ", err, true)
 
 	manager := task.NewManager(set.Task.WorkerCount)
 
