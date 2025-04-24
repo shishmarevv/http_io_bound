@@ -8,7 +8,7 @@
 
 A simple, extensible Go service that lets you enqueue and track long-running I/O-bound jobs (3–5 minutes) entirely in memory, without any external databases or message brokers.
 
-<img align="center" width="30%" src="./assets/logo.png">
+<img align="right" width="30%" src="./assets/logo.png">
 
 ## Features
 
